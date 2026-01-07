@@ -533,6 +533,14 @@ Retrieve the Minikube cluster IP and store it for later use:
 minikube ip
 ```
 
+## Create a new Namespace
+
+Retrieve the Minikube cluster IP and store it for later use:
+
+```bash
+kubectl create namespace vulnerable-test
+```
+
 ##  Build and Deploy Your App on VM
 
 ### Point Docker to Minikube
@@ -558,7 +566,7 @@ kubectl apply -f k8s-deployment.yaml
 ### Check Pod Status
 
 ```bash
-kubectl get pods
+kubectl get pods -n vulnerable-test
 ```
 
 > You will see the pods running.
@@ -567,7 +575,8 @@ kubectl get pods
 ### Expose the App (Port Forwarding)
 
 ```bash
-kubectl port-forward svc/flask-service 5000:80 --address 0.0.0.0
+kubectl port-forward svc/vulnerable-flask-service 5000:80 -n vulnerable-test --address 0.0.0.0
+
 ```
 
 - Make sure to give correct service name.
@@ -583,3 +592,109 @@ kubectl port-forward svc/flask-service 5000:80 --address 0.0.0.0
 ---
 
 
+````md
+## Run the kube-hunter Job
+
+Apply the kube-hunter Job manifest:
+
+```bash
+kubectl create -f kube-hunter.yaml
+````
+
+## Find the Pod Name
+
+You can find the pod created by the Job using either of the following commands:
+
+```bash
+kubectl get pods
+```
+
+## View the Test Results
+
+Once you have the pod name, view the kube-hunter scan results from the pod logs:
+
+```bash
+kubectl logs <pod-name>
+```
+
+## Vulnerability Verifications
+
+### Verify Privileged Container Access
+Check whether the container can access the host filesystem:
+
+```bash
+kubectl get pods -n vulnerable-test
+kubectl exec -it vulnerable-flask-6c76b9944b-qtvfd -n vulnerable-test -- ls /host
+
+````
+
+### Access Containers with Elevated Privileges
+
+Open an interactive shell inside the container:
+
+```bash
+kubectl exec -it vulnerable-flask-6c76b9944b-qtvfd -n vulnerable-test -- /bin/bash
+```
+
+### Check Mounted Secrets
+
+List secrets across all namespaces:
+
+```bash
+kubectl get secrets --all-namespaces
+```
+
+### Test Service Account Permissions
+
+Verify what actions the service account is allowed to perform:
+
+```bash
+kubectl auth can-i --list --as=system:serviceaccount:vulnerable-test:insecure-service-account
+```
+
+## Apply kube-bench
+
+Apply the kube-bench manifest to the cluster:
+
+```bash
+kubectl apply -f kube-bench.yaml
+```
+
+## View the kube-bench Report
+
+Filter everything between `{` and `}` (the start and end of the JSON output) from the kube-bench logs and redirect it into a clean JSON file:
+
+```bash
+kubectl logs kube-bench | sed -n '/^{/,/^}$/p' > kube-bench-results.json
+````
+
+The output may look difficult to read in raw form, so it’s recommended to format and inspect the JSON using **jq**.
+
+### What is jq?
+
+`jq` is a powerful, lightweight, and flexible command-line JSON processor.
+It works like `sed`, `awk`, or `grep`, but is specifically designed for JSON data.
+You can use it to slice, filter, map, and transform structured JSON easily.
+
+### Install jq
+
+```bash
+sudo apt install jq
+```
+
+### Pretty-print the JSON Report
+
+```bash
+jq . kube-bench-results.json
+```
+
+
+
+
+## Generate kube-bench Report
+
+Run the Python script to generate the kube-bench report:
+
+```bash
+python3 kubebench-report-generator.py
+```

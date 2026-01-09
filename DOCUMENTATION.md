@@ -222,38 +222,51 @@ spec:
       securityContext:
         privileged: true
       volumeMounts:
-        - name: var-lib-etcd
-          mountPath: /var/lib/etcd
+        - name: etc
+          mountPath: /etc
           readOnly: true
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-          readOnly: true
-        - name: etc-systemd
-          mountPath: /etc/systemd
+        - name: var-lib
+          mountPath: /var/lib
           readOnly: true
         - name: usr-bin
           mountPath: /usr/bin
           readOnly: true
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
+        - name: usr-lib
+          mountPath: /usr/lib
+          readOnly: true
+        - name: lib
+          mountPath: /lib
+          readOnly: true
+        - name: proc
+          mountPath: /proc
+          readOnly: true
+        - name: run-systemd
+          mountPath: /run/systemd
           readOnly: true
   volumes:
-    - name: var-lib-etcd
+    - name: etc
       hostPath:
-        path: /var/lib/etcd
-    - name: etc-kubernetes
+        path: /etc
+    - name: var-lib
       hostPath:
-        path: /etc/kubernetes
-    - name: etc-systemd
-      hostPath:
-        path: /etc/systemd
+        path: /var/lib
     - name: usr-bin
       hostPath:
         path: /usr/bin
-    - name: var-lib-kubelet
+    - name: usr-lib
       hostPath:
-        path: /var/lib/kubelet
+        path: /usr/lib
+    - name: lib
+      hostPath:
+        path: /lib
+    - name: proc
+      hostPath:
+        path: /proc
+    - name: run-systemd
+      hostPath:
+        path: /run/systemd
   restartPolicy: Never
+
 ```
 
 ---

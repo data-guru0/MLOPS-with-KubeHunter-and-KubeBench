@@ -15,8 +15,11 @@ spec:
       labels:
         app: vulnerable-flask
     spec:
+      serviceAccountName: insecure-service-account
       securityContext:
         runAsUser: 0   # Running as root (vulnerability)
+        capabilities:
+            add: ["SYS_ADMIN", "NET_ADMIN"]  # Excessive capabilities
       containers:
         - name: flask-container
           image: flask-app:latest
@@ -54,4 +57,3 @@ spec:
       port: 80
       targetPort: 5000
       nodePort: 30081
-

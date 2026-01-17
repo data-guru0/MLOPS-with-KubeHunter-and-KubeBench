@@ -17,9 +17,7 @@ spec:
     spec:
       serviceAccountName: insecure-service-account
       securityContext:
-        runAsUser: 0   # Running as root (vulnerability)
-        capabilities:
-            add: ["SYS_ADMIN", "NET_ADMIN"]  # Excessive capabilities
+        runAsUser: 0  # Running as root (vulnerability)
       containers:
         - name: flask-container
           image: flask-app:latest
@@ -27,21 +25,22 @@ spec:
           ports:
             - containerPort: 5000
           securityContext:
-            privileged: true                # Privileged container (vulnerability)
+            privileged: true
             allowPrivilegeEscalation: true
             readOnlyRootFilesystem: false
             runAsNonRoot: false
+            capabilities:
+              add: ["SYS_ADMIN", "NET_ADMIN"]  # Excessive capabilities (moved here)
           env:
             - name: SECRET_PASSWORD
-              value: "admin123"             # Hardcoded secret (vulnerability)
+              value: "admin123"
           volumeMounts:
             - name: host-root
-              mountPath: /host              # Host path mount (vulnerability)
+              mountPath: /host
       volumes:
         - name: host-root
           hostPath:
-            path: /                         # Host path mount (vulnerability)
-
+            path: /
 ---
 apiVersion: v1
 kind: Service
